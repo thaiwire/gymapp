@@ -3,8 +3,27 @@ export interface IUser {
     email: string
     name : string | null
     password ?: string
+    is_active? : boolean
     resume_data : IResumeData | null
     role : "user" | "admin"
+}
+
+export interface IDocumentGroup {
+  id: string;
+  name: string;
+  description: string;
+  is_active?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IDepartment {
+  id: string;
+  name: string;
+  description: string;
+  is_active?: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface IResumeData {

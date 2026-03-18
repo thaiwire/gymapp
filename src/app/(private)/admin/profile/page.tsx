@@ -41,7 +41,7 @@ const passwordSchema = z
 type ProfileFormValues = z.infer<typeof profileSchema>;
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
-function UserProfilePage() {
+function AdminProfilePage() {
   const { user, setUser } = useUserStore();
 
   const profileForm = useForm<ProfileFormValues>({
@@ -96,7 +96,7 @@ function UserProfilePage() {
     <section className="mx-auto grid w-full max-w-4xl gap-6 lg:grid-cols-2">
       <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <h1 className="text-xl font-semibold text-zinc-800">Profile Details</h1>
-        <p className="mt-1 text-sm text-zinc-500">Update your display name used in your account.</p>
+        <p className="mt-1 text-sm text-zinc-500">Update your display name shown across admin screens.</p>
 
         <Form {...profileForm}>
           <form
@@ -183,4 +183,4 @@ function UserProfilePage() {
   );
 }
 
-export default UserProfilePage;
+export default AdminProfilePage;

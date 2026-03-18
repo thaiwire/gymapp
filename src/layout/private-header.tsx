@@ -34,15 +34,19 @@ type MenuItem = {
 const userMenuItems: MenuItem[] = [
   { label: "Template", href: "/user/template", icon: BookOpen },
   { label: "Resume Data", href: "/user/resume-data", icon: Database },
+  { label: "Document Trans", href: "/user/doctrans", icon: Database },
   { label: "Profile", href: "/user/profile", icon: UserCircle },
   { label: "Settings", href: "/user/settings", icon: Settings },
 ];
 
 const adminMenuItems: MenuItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-  { label: "Template", href: "/admin/template", icon: BookOpen },
-  { label: "Users", href: "/admin/users", icon: Users },
+  
   { label: "Subscriptions", href: "/admin/subscriptions", icon: WalletCards },
+  { label: "Document Groups", href: "/admin/docgroup", icon: Database },
+  { label: "Departments", href: "/admin/departments", icon: Database },
+  { label: "Profile", href: "/admin/profile", icon: UserCircle },
+  { label: "Users", href: "/admin/users", icon: Users },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
