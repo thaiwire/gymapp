@@ -1,5 +1,6 @@
 "use client";
 
+import { DepartmentRow, getAllDepartments } from "@/actions/departments";
 import {
   AdminUserRow,
   createUserProfile,
@@ -20,14 +21,18 @@ import { IUser } from "@/interfaces";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+const NO_DEPARTMENT_VALUE = "__none__";
+
 type UserDraft = {
   name: string;
   role: IUser["role"];
+  department: string | null;
   is_active: boolean;
 };
 
 function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUserRow[]>([]);
+  const [departments, setDepartments] = useState<DepartmentRow[]>([]);
   const [drafts, setDrafts] = useState<Record<string, UserDraft>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
@@ -36,6 +41,7 @@ function AdminUsersPage() {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserName, setNewUserName] = useState("");
   const [newUserRole, setNewUserRole] = useState<IUser["role"]>("user");
+  const [newUserDepartment, setNewUserDepartment] = useState<string | null>(null);
   const [newUserActive, setNewUserActive] = useState(false);
 
   const usersCountLabel = useMemo(() => {
@@ -50,26 +56,53 @@ function AdminUsersPage() {
       acc[row.id] = {
         name: row.name ?? "",
         role: row.role,
+        department: row.department ?? null,
         is_active: row.is_active,
       };
       return acc;
     }, {});
   };
 
+  const getDepartmentSelectValue = (value: string | null | undefined) => {
+    return value ?? NO_DEPARTMENT_VALUE;
+  };
+
+  const normalizeDepartmentValue = (value: string) => {
+    return value === NO_DEPARTMENT_VALUE ? null : value;
+  };
+
+  const departmentNameById = useMemo(() => {
+    return departments.reduce<Record<string, string>>((acc, department) => {
+      acc[department.id] = department.name;
+      return acc;
+    }, {});
+  }, [departments]);
+
   const loadUsers = async () => {
     setIsLoading(true);
-    const result = await getAllUsers();
+    const [usersResult, departmentsResult] = await Promise.all([
+      getAllUsers(),
+      getAllDepartments(),
+    ]);
 
-    if (!result.success) {
-      toast.error(result.error || "Unable to fetch users.");
+    if (!usersResult.success) {
+      toast.error(usersResult.error || "Unable to fetch users.");
       setUsers([]);
       setDrafts({});
+      setDepartments([]);
       setIsLoading(false);
       return;
     }
 
-    setUsers(result.data);
-    setDrafts(mapUsersToDrafts(result.data));
+    if (!departmentsResult.success) {
+      toast.error(departmentsResult.error || "Unable to fetch departments.");
+      setDepartments([]);
+    } else {
+      setDepartments(departmentsResult.data);
+    }
+
+    setUsers(usersResult.data);
+    setDrafts(mapUsersToDrafts(usersResult.data));
     setIsLoading(false);
   };
 
@@ -77,11 +110,20 @@ function AdminUsersPage() {
     loadUsers();
   }, []);
 
-  const updateDraft = (id: string, key: keyof UserDraft, value: string | boolean) => {
+  const updateDraft = (
+    id: string,
+    key: keyof UserDraft,
+    value: string | boolean | null
+  ) => {
     setDrafts((prev) => ({
       ...prev,
       [id]: {
-        ...(prev[id] ?? { name: "", role: "user", is_active: false }),
+        ...(prev[id] ?? {
+          name: "",
+          role: "user",
+          department: null,
+          is_active: false,
+        }),
         [key]: value,
       },
     }));
@@ -98,6 +140,7 @@ function AdminUsersPage() {
       email: newUserEmail,
       name: newUserName,
       role: newUserRole,
+      department: newUserDepartment,
       is_active: newUserActive,
     });
     setIsCreating(false);
@@ -111,6 +154,7 @@ function AdminUsersPage() {
     setNewUserEmail("");
     setNewUserName("");
     setNewUserRole("user");
+    setNewUserDepartment(null);
     setNewUserActive(false);
     await loadUsers();
   };
@@ -122,10 +166,12 @@ function AdminUsersPage() {
     }
 
     setSavingUserId(id);
+        
     const result = await updateUserProfile({
       id,
       name: draft.name,
       role: draft.role,
+      department: draft.department,
       is_active: draft.is_active,
     });
     setSavingUserId(null);
@@ -197,6 +243,28 @@ function AdminUsersPage() {
             </Select>
           </div>
 
+          <div className="w-[180px]">
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Department
+            </label>
+            <Select
+              value={getDepartmentSelectValue(newUserDepartment)}
+              onValueChange={(value) => setNewUserDepartment(normalizeDepartmentValue(value))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_DEPARTMENT_VALUE}>None</SelectItem>
+                {departments.map((department) => (
+                  <SelectItem key={department.id} value={department.id}>
+                    {department.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="w-[140px]">
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
               Status
@@ -234,6 +302,7 @@ function AdminUsersPage() {
                 <th className="px-3 py-2">Email</th>
                 <th className="px-3 py-2">Name</th>
                 <th className="px-3 py-2">Role</th>
+                <th className="px-3 py-2">Department</th>
                 <th className="px-3 py-2">Status</th>
                 <th className="px-3 py-2">Actions</th>
               </tr>
@@ -242,13 +311,13 @@ function AdminUsersPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td className="px-3 py-6 text-sm text-zinc-500" colSpan={5}>
+                  <td className="px-3 py-6 text-sm text-zinc-500" colSpan={6}>
                     Loading users...
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td className="px-3 py-6 text-sm text-zinc-500" colSpan={5}>
+                  <td className="px-3 py-6 text-sm text-zinc-500" colSpan={6}>
                     No users found.
                   </td>
                 </tr>
@@ -257,6 +326,7 @@ function AdminUsersPage() {
                   const draft = drafts[user.id] ?? {
                     name: "",
                     role: "user" as const,
+                    department: null,
                     is_active: false,
                   };
 
@@ -288,6 +358,41 @@ function AdminUsersPage() {
                             <SelectItem value="admin">admin</SelectItem>
                           </SelectContent>
                         </Select>
+                      </td>
+
+                      <td className="px-3 py-3">
+                        <Select
+                          value={getDepartmentSelectValue(draft.department)}
+                          onValueChange={(value) =>
+                            updateDraft(
+                              user.id,
+                              "department",
+                              normalizeDepartmentValue(value)
+                            )
+                          }
+                        >
+                          <SelectTrigger className="h-9 w-[180px]">
+                            <SelectValue placeholder="Department" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {draft.department && !departmentNameById[draft.department] ? (
+                              <SelectItem value={draft.department}>
+                                Unknown department ({draft.department})
+                              </SelectItem>
+                            ) : null}
+                            <SelectItem value={NO_DEPARTMENT_VALUE}>None</SelectItem>
+                            {departments.map((department) => (
+                              <SelectItem key={department.id} value={department.id}>
+                                {department.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {draft.department && !departmentNameById[draft.department] ? (
+                          <p className="mt-1 text-xs text-amber-600">
+                            Selected department is no longer available.
+                          </p>
+                        ) : null}
                       </td>
 
                       <td className="px-3 py-3">

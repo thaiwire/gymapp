@@ -5,6 +5,7 @@ import { IUser } from "@/interfaces";
 import { revalidatePath } from "next/cache";
 
 export type AdminUserRow = Pick<IUser, "id" | "email" | "name" | "role"> & {
+  department: string | null;
   is_active: boolean;
 };
 
@@ -246,7 +247,7 @@ export const getLoggedInUser = async () => {
     }
     const { data: profileData, error: profileError } = await supabase
       .from("user_profile")
-      .select("id, email, name, role, resume_data")
+      .select("id, email, name, role, department, resume_data")
       .eq("email", user.email!)
       .single();
 
@@ -447,7 +448,7 @@ export const getAllUsers = async (): Promise<GetUsersResult> => {
 
     const { data, error } = await supabase
       .from("user_profile")
-      .select("id, email, name, role, is_active")
+      .select("id, email, name, role, department, is_active")
       .order("email", { ascending: true });
 
     if (error) {
@@ -470,6 +471,7 @@ export const createUserProfile = async (payload: {
   email: string;
   name: string;
   role: IUser["role"];
+  department: string | null;
   is_active: boolean;
 }): Promise<UpsertUserProfileResult> => {
   try {
@@ -480,6 +482,7 @@ export const createUserProfile = async (payload: {
       email: payload.email.trim().toLowerCase(),
       name: payload.name.trim() || null,
       role: payload.role,
+      department: payload.department,
       is_active: payload.is_active,
     });
 
@@ -505,6 +508,7 @@ export const updateUserProfile = async (payload: {
   id: string;
   name: string;
   role: IUser["role"];
+  department: string | null;
   is_active: boolean;
 }): Promise<UpsertUserProfileResult> => {
   try {
@@ -530,6 +534,7 @@ export const updateUserProfile = async (payload: {
       .update({
         name: payload.name.trim() || null,
         role: payload.role,
+        department: payload.department,
         is_active: payload.is_active,
       })
       .eq("id", payload.id);

@@ -33,7 +33,6 @@ type MenuItem = {
 
 const userMenuItems: MenuItem[] = [
   { label: "Template", href: "/user/template", icon: BookOpen },
-  { label: "Resume Data", href: "/user/resume-data", icon: Database },
   { label: "Document Trans", href: "/user/doctrans", icon: Database },
   { label: "Profile", href: "/user/profile", icon: UserCircle },
   { label: "Settings", href: "/user/settings", icon: Settings },

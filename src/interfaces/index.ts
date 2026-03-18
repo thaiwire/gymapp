@@ -4,8 +4,23 @@ export interface IUser {
     name : string | null
     password ?: string
     is_active? : boolean
+    department? : string | null
     resume_data : IResumeData | null
     role : "user" | "admin"
+}
+
+export interface IDocumenttrans {
+    id: string;
+    document_code: string;
+    document_date : Date;
+    document_group: string;
+    department : string;
+    docfile : string;
+    note : string;
+    document_usr : string;
+    document_url: string;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface IDocumentGroup {
